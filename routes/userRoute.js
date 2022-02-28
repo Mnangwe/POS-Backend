@@ -1,16 +1,18 @@
+require('dotenv').config()
 const express = require('express');
 const router = express.Router();
 const User = require('../models/users')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt') 
-
+const {getProduct, getUser} = require('../authGaurd/Objects')
+const auth = require('../authGaurd/auth');
 
 // CREATING A USER
 router.post('/', async (req, res) => {
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(req.body.password, salt) 
     const user = new User({
-        name: req.body.name,
+        fullname: req.body.name,
         email: req.body.email,
         contact: req.body.contact,
         password: hashedPassword
@@ -25,8 +27,9 @@ router.post('/', async (req, res) => {
   
 // READING ONE USER
 router.get('/', async (req,res) => {
+    const queryUser = req.query.new
     try {
-        const users = await User.find();
+        const users = queryUser ? await User.find().sort({_id: -1}).limit(6) : await User.find();
         res.json(users)
     } catch (err) {
         res.status(500).json({ msg: err.message})
@@ -46,7 +49,7 @@ router.put('/:id', getUser, async (req, res) => {
     if(req.body.name != null) res.user.name = req.body.name 
     if(req.body.email != null) res.user.email = req.body.email 
     if(req.body.password != null) res.user.password = req.body.password 
-    if(req.body.contact != null) res.user.contact = req.body.contact 
+     
 
     try {
         const updatedUser = await res.user.save()
@@ -66,7 +69,12 @@ router.delete('/:id', getUser, async (req, res) => {
     }
 })
   
-//  LOG IN USER
+
+
+ 
+
+  
+  //  LOG IN USER
 router.patch('/', async (req, res) => {
     const users = await User.find()
     const user = users.filter(user => user.email == req.body.email)
@@ -81,73 +89,118 @@ router.patch('/', async (req, res) => {
             res.json({ jwt: accessToken })
             console.log({msg: 'Successfully logged in!'})
 
-        }catch {
-            res.status(500).send()
+        }catch (err) {
+            res.status(500).send({ msg: err.message })
         }
-    }
-    // res.send(user[0])
-    // const users = await User.findOne()
-    // // console.log(users)
-   // console.log("the users: "+user)
-    // if (user == null) {
-    //     res.status(400).send('Cannot find user')
-    // }else{
-    //     try {
-    //         // 
-    //         // console.log(compared)
-    //         console.log(user)
-    //         console.log(await bcrypt.compare(user.password, req.body.password))
-    //         if(await bcrypt.compare(req.body.password, user.password)) {
-    //             res.send({msg: 'Successfully logged in!'})
-    //         }else {
-    //             res.send({msg: 'User not found'})
-    //         }
-    //     }catch (err) {
-    //         res.status(500).json({ msg: err.message})
-    //     }
-    // }
-    
-    // const { email, password } = req.body;
-    // let sql = `SELECT * FROM users where user_email = '${email}'`;
-    
-  
-    // RUN THE QUERY 
-  
-      
-    //   con.query(sql, async (err, result) => {
-    //     const user = result[0]
-        
-    //     let compared = await bcrypt.compare(password, user.user_password)
-    //     console.log(compared)
-    //     if(compared){
-    //       console.log(user)
-    //       try {
-    //         const accessToken = jwt.sign(JSON.stringify(user), process.env.ACCESS_TOKEN_SECRET)
-    //         console.log({msg: 'Token has been created'})
-    //         res.json({ jwt: accessToken })
-    //         console.log({msg: 'Successfully logged in!'})
-    //       }catch {
-    //         res.status(500).send()
-    //     }
-        
-        
-    //   }
-    // })
+    }   
   
   })
 
-  // MIDDLEWARE
-async function getUser(req, res, next) {
-    let user
-    try {
-    user = await User.findById(req.params.id)
-    if(!user) res.status(404).json({ msg: 'Cannot find user'})
-    }catch (err) {
-    res.status(500).send({ msg: err.message })
-    }
-
-    res.user = user
-    next()
-  }
+  // STARTING WITH CART ROUTES
+  router.post("/:id/cart", [auth, getProduct], async (req, res, next) => {
+    //  console.log(req.user)
   
+    const user = await User.findById(req.user[0]._id);
+    // console.log(user)
+    let product_id = res.product._id;
+    let title = res.product.title;
+    let categories = res.product.categories;
+    let img = res.product.img;
+    let price = res.product.price;
+    let created_by = req.user[0]._id;
+    let quantity 
+    if(req.body.quantity) quantity = await req.body.quantity 
+    else quantity = await res.product.quantity 
+    
+    
+  
+    try {
+      // console.log(Array.isArray(user.cart))
+      // user.cart = []
+      user.cart.push({
+        product_id,
+        title,
+        categories,
+        img,
+        price,
+        quantity,
+        created_by,
+      });
+      const updatedUser = await user.save();
+      res.status(201).json(updatedUser);
+    } catch (error) {
+      res.status(500).json(console.log(error));
+    }
+  });
+
+// GET USER CART
+router.get("/:id/cart", [auth, getProduct], (req,res) => {
+
+})
+
+//updates the items in the users cart
+router.put("/:id/cart", [auth, getProduct], async (req, res, next) => {
+    const user = await User.findById(req.user[0]._id);
+    const inCart = user.cart.some(prod => prod._id == req.params.id);
+    if (inCart) {
+        product.quantity += req.body.quantity;
+        const updatedUser = await user.save();
+        try {
+        res.status(201).json(updatedUser.cart);
+        } catch (error) {
+        res.status(500).json(console.log(error));
+        }
+    } else {
+        try {
+        // console.log(Array.isArray(user.cart))
+        // user.cart = []
+        let product_id = res.product._id;
+        let title = res.product.title;
+        let categories = res.product.categories;
+        let img = res.product.img;
+        let price = res.product.price;
+        let quantity = req.body;
+        let created_by = req.user._id;
+        user.cart.push({
+            product_id,
+            title,
+            categories,
+            img,
+            price,
+            quantity,
+            created_by,
+        });
+        const updatedUser = await user.save();
+        res.status(201).json(updatedUser.cart);
+        } catch (error) {
+        res.status(500).json(console.log(error));
+        }
+    }
+});
+
+  //clears the user cart
+  router.delete("/:id/cart", [auth, getProduct], async (req, res, next) => {
+    const user = await User.findById(req.user[0]._id);
+    const inCart = user.cart.find(prod => prod.product_id == req.params.id);
+    console.log(inCart)
+    function deleteBook(position) {
+        let confirmation = confirm(
+          `Are you sure you want to remove ${books[position].title.toUpperCase()} from the list?`
+        );
+      
+        if (confirmation) {
+          books.splice(position, 1);
+          localStorage.setItem("Books", JSON.stringify(books));
+          readBooks(books);
+        }
+      }
+    user.remove(inCart)
+    try{
+        inCart.remove()
+        res.json({ msg: '1 person deleted'})
+    }catch (err) {
+        res.status(500).json({ msg: err.message})
+    }
+   
+  });
   module.exports = router;
