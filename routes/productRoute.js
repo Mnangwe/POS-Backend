@@ -17,6 +17,7 @@ router.post('/', authenticateToken, async (req, res) => {
         date: d.toLocaleString(),
         price: req.body.price,
         user_id: user._id
+        
     })
     try {
         const newProduct = await product.save()

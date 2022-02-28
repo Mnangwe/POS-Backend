@@ -12,7 +12,8 @@ router.post('/', async (req, res) => {
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(req.body.password, salt) 
     const user = new User({
-        fullname: req.body.name,
+        name:req.body.name,
+        lname: req.body.lname,
         email: req.body.email,
         contact: req.body.contact,
         password: hashedPassword
@@ -38,21 +39,22 @@ router.get('/', async (req,res) => {
 })
 
 // READING ONE USER
-router.get('/:id', getUser, (req,res) => {
-    
-    res.send(res.user)
+router.get('/:id', auth, async (req,res) => {
+  const user = await User.findById(req.user[0]._id);
+    res.send(user)
     
   })
 
 // UPDATE USER
-router.put('/:id', getUser, async (req, res) => {
-    if(req.body.name != null) res.user.name = req.body.name 
-    if(req.body.email != null) res.user.email = req.body.email 
-    if(req.body.password != null) res.user.password = req.body.password 
+router.put('/:id', auth, async (req, res) => {
+  const user = await User.findById(req.user[0]._id);
+    if(req.body.fullname != null) user.fullname = req.body.fullname 
+    if(req.body.email != null) user.email = req.body.email 
+    if(req.body.password != null) user.password = req.body.password 
      
 
     try {
-        const updatedUser = await res.user.save()
+        const updatedUser = await user.save()
         res.json(updatedUser)
     }catch (err){
         res.status(400).json({ msg: err.message })
@@ -60,9 +62,10 @@ router.put('/:id', getUser, async (req, res) => {
 })
   
 // DELETE USER
-router.delete('/:id', getUser, async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
+  const user = await User.findById(req.user[0]._id);
     try{
-        await res.user.remove()
+        await user.remove()
         res.json({ msg: '1 person deleted'})
     }catch (err) {
         res.status(500).json({ msg: err.message})
@@ -80,7 +83,8 @@ router.patch('/', async (req, res) => {
     const user = users.filter(user => user.email == req.body.email)
    
     console.log(user[0])
-    let compared = await bcrypt.compare(req.body.password, user[0].password)
+    const password = req.body.password
+    let compared = await bcrypt.compare(password, user[0].password)
     if(compared) {
         console.log(compared)
         try {
@@ -92,7 +96,7 @@ router.patch('/', async (req, res) => {
         }catch (err) {
             res.status(500).send({ msg: err.message })
         }
-    }   
+    }  
   
   })
 
@@ -141,41 +145,45 @@ router.get("/:id/cart", [auth, getProduct], (req,res) => {
 //updates the items in the users cart
 router.put("/:id/cart", [auth, getProduct], async (req, res, next) => {
     const user = await User.findById(req.user[0]._id);
-    const inCart = user.cart.some(prod => prod._id == req.params.id);
+    const inCart = user.cart.some(prod => prod.product_id == req.params.id);
+    console.log(inCart)
     if (inCart) {
-        product.quantity += req.body.quantity;
+        const product = user.cart.find(prod => prod.product_id == req.params.id)
+        product.quantity = req.body.quantity;
         const updatedUser = await user.save();
+        console.log(updatedUser)
         try {
         res.status(201).json(updatedUser.cart);
         } catch (error) {
         res.status(500).json(console.log(error));
         }
-    } else {
-        try {
-        // console.log(Array.isArray(user.cart))
-        // user.cart = []
-        let product_id = res.product._id;
-        let title = res.product.title;
-        let categories = res.product.categories;
-        let img = res.product.img;
-        let price = res.product.price;
-        let quantity = req.body;
-        let created_by = req.user._id;
-        user.cart.push({
-            product_id,
-            title,
-            categories,
-            img,
-            price,
-            quantity,
-            created_by,
-        });
-        const updatedUser = await user.save();
-        res.status(201).json(updatedUser.cart);
-        } catch (error) {
-        res.status(500).json(console.log(error));
-        }
-    }
+      }
+    // } else {
+    //     try {
+    //     // console.log(Array.isArray(user.cart))
+    //     // user.cart = []
+    //     let product_id = res.product._id;
+    //     let title = res.product.title;
+    //     let categories = res.product.categories;
+    //     let img = res.product.img;
+    //     let price = res.product.price;
+    //     let quantity = req.body;
+    //     let created_by = req.user._id;
+    //     user.cart.push({
+    //         product_id,
+    //         title,
+    //         categories,
+    //         img,
+    //         price,
+    //         quantity,
+    //         created_by,
+    //     });
+    //     const updatedUser = await user.save();
+    //     res.status(201).json(updatedUser.cart);
+    //     } catch (error) {
+    //     res.status(500).json(console.log(error));
+    //     }
+    // }
 });
 
   //clears the user cart
@@ -183,17 +191,17 @@ router.put("/:id/cart", [auth, getProduct], async (req, res, next) => {
     const user = await User.findById(req.user[0]._id);
     const inCart = user.cart.find(prod => prod.product_id == req.params.id);
     console.log(inCart)
-    function deleteBook(position) {
-        let confirmation = confirm(
-          `Are you sure you want to remove ${books[position].title.toUpperCase()} from the list?`
-        );
+    // function deleteBook(position) {
+    //     let confirmation = confirm(
+    //       `Are you sure you want to remove ${books[position].title.toUpperCase()} from the list?`
+    //     );
       
-        if (confirmation) {
-          books.splice(position, 1);
-          localStorage.setItem("Books", JSON.stringify(books));
-          readBooks(books);
-        }
-      }
+    //     if (confirmation) {
+    //       books.splice(position, 1);
+    //       localStorage.setItem("Books", JSON.stringify(books));
+    //       readBooks(books);
+    //     }
+    //   }
     user.remove(inCart)
     try{
         inCart.remove()

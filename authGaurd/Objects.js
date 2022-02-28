@@ -1,4 +1,6 @@
 const Product = require('../models/products')
+const User = require('../models/users')
+const auth = require('./auth')
 
 async function getProduct(req, res, next) {
     let product
@@ -13,7 +15,7 @@ async function getProduct(req, res, next) {
     next()
 }
 
-const User = require('../models/users')
+
 
 async function getUser(req, res, next) {
     let user
@@ -25,6 +27,7 @@ async function getUser(req, res, next) {
     }
 
     res.user = user
+
     next()
   }
 
