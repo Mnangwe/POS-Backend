@@ -21,11 +21,11 @@ const db = mongoose.connection
 db.on('error', err => console.error(err))
 db.once('open', () => console.log('Connected to Database'))
 
-app.set('port', process.env.port || 3200) 
+app.set('port', process.env.PORT || 3200) 
 
 app.get('/', (req, res, next) =>{
     res.send({
-        message: "Welcome to Abduls and Lilitas API",
+        message: "Welcome to Azabenathi & Sergio's API",
         user_routes: {
           user_register: {
             method: "POST",
