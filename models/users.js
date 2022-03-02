@@ -5,11 +5,7 @@ const userSchema = new mongoose.Schema({
     user_id:{
         type: String
       },
-    lname: {
-        type:String,
-        required: true
-    },
-    name: {
+    fullname: {
         type:String,
         required: true
     },

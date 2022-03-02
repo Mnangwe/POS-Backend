@@ -12,8 +12,7 @@ router.post('/', async (req, res) => {
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(req.body.password, salt) 
     const user = new User({
-        name:req.body.name,
-        lname: req.body.lname,
+        fullname: req.body.fullname,
         email: req.body.email,
         contact: req.body.contact,
         password: hashedPassword
@@ -131,6 +130,19 @@ router.patch('/', async (req, res) => {
         created_by,
       });
       const updatedUser = await user.save();
+      if(updatedUser) {
+        console.log(updatedUser)
+        try {
+            const accessToken = jwt.sign(JSON.stringify(updatedUser), process.env.ACCESS_TOKEN_SECRET)
+            console.log({msg: 'Token has been created'})
+            res.json({ jwt: accessToken })
+            console.log({msg: 'Successfully added to your cart!'})
+
+        }catch (err) {
+            res.status(500).send({ msg: err.message })
+        }
+    }  
+  
       res.status(201).json(updatedUser);
     } catch (error) {
       res.status(500).json(console.log(error));
@@ -189,7 +201,7 @@ router.put("/:id/cart", [auth, getProduct], async (req, res, next) => {
   //clears the user cart
   router.delete("/:id/cart", [auth, getProduct], async (req, res, next) => {
     const user = await User.findById(req.user[0]._id);
-    const inCart = user.cart.find(prod => prod.product_id == req.params.id);
+    const inCart = user.cart.some(prod => prod.product_id == req.params.id);
     console.log(inCart)
     // function deleteBook(position) {
     //     let confirmation = confirm(
