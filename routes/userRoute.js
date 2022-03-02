@@ -50,6 +50,9 @@ router.put('/:id', auth, async (req, res) => {
     if(req.body.fullname != null) user.fullname = req.body.fullname 
     if(req.body.email != null) user.email = req.body.email 
     if(req.body.password != null) user.password = req.body.password 
+    if(req.body.contact != null) user.fullname = req.body.fullname 
+    if(req.body.image != null) user.email = req.body.email 
+    if(req.body.cover != null) user.password = req.body.password 
      
 
     try {
@@ -78,6 +81,7 @@ router.delete('/:id', auth, async (req, res) => {
   
   //  LOG IN USER
 router.patch('/', async (req, res) => {
+  try {
     const users = await User.find()
     const user = users.filter(user => user.email == req.body.email)
    
@@ -86,16 +90,17 @@ router.patch('/', async (req, res) => {
     let compared = await bcrypt.compare(password, user[0].password)
     if(compared) {
         console.log(compared)
-        try {
+        
             const accessToken = jwt.sign(JSON.stringify(user), process.env.ACCESS_TOKEN_SECRET)
             console.log({msg: 'Token has been created'})
             res.json({ jwt: accessToken })
             console.log({msg: 'Successfully logged in!'})
+          } 
 
         }catch (err) {
             res.status(500).send({ msg: err.message })
         }
-    }  
+     
   
   })
 
