@@ -81,31 +81,35 @@ router.delete('/:id', auth, async (req, res) => {
   
   //  LOG IN USER
 router.patch('/', async (req, res) => {
-  try {
+  if(!req.body.password || !req.body.email) { return res.status(500).send({msg:"You did not enter your details"})}
+  else{
     const users = await User.find()
     const user = users.filter(user => user.email == req.body.email)
-   
-    console.log(user[0])
+    console.log(user)
+    
+    
     const password = req.body.password
     let compared = await bcrypt.compare(password, user[0].password)
     if(compared) {
         console.log(compared)
+        try {
+          const accessToken = jwt.sign(JSON.stringify(user), process.env.ACCESS_TOKEN_SECRET)
+          console.log({msg: 'Token has been created'})
+          res.json({ jwt: accessToken })
+          console.log({msg: 'Successfully logged in!'})
+      
         
-            const accessToken = jwt.sign(JSON.stringify(user), process.env.ACCESS_TOKEN_SECRET)
-            console.log({msg: 'Token has been created'})
-            res.json({ jwt: accessToken })
-            console.log({msg: 'Successfully logged in!'})
-          } 
-
-        }catch (err) {
-            res.status(500).send({ msg: err.message })
-        }
-     
+      }catch (err) {
+          res.status(500).send({ msg: err.message })
+      }
+    } 
+  }
+  
   
   })
 
   // STARTING WITH CART ROUTES
-  router.post("/:id/cart", [auth, getProduct], async (req, res, next) => {
+router.post("/:id/cart", [auth, getProduct], async (req, res, next) => {
     //  console.log(req.user)
   
     const user = await User.findById(req.user[0]._id);
