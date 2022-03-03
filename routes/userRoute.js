@@ -45,7 +45,7 @@ router.get('/:id', auth, async (req,res) => {
   })
 
 // UPDATE USER
-router.put('/', auth, async (req, res) => {
+router.put('/:id', auth, async (req, res) => {
   const user = await User.findById(req.user[0]._id);
     if(req.body.fullname != null) user.fullname = req.body.fullname 
     if(req.body.email != null) user.email = req.body.email 
