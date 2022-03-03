@@ -38,7 +38,7 @@ router.get('/', async (req,res) => {
 })
 
 // READING ONE USER
-router.get('/user', auth, async (req,res) => {
+router.get('/:id', auth, async (req,res) => {
   const user = await User.findById(req.user[0]._id);
     res.send(user)
     
@@ -78,7 +78,7 @@ router.get('/user', auth, async (req,res) => {
 //     }
 // })
 
-router.put('/', auth, async (req, res, next)=>{
+router.put('/:id', auth, async (req, res, next)=>{
   // Get user from DB using Schema
   const user = await User.findById(req.user[0]._id)
 
@@ -117,7 +117,7 @@ router.put('/', auth, async (req, res, next)=>{
 })
   
 // DELETE USER
-router.delete('/user', auth, async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
   const user = await User.findById(req.user[0]._id);
     try{
         await user.remove()
