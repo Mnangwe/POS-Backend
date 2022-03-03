@@ -38,47 +38,86 @@ router.get('/', async (req,res) => {
 })
 
 // READING ONE USER
-router.get('/:id', auth, async (req,res) => {
+router.get('/user', auth, async (req,res) => {
   const user = await User.findById(req.user[0]._id);
     res.send(user)
     
   })
 
 // UPDATE USER
-router.put('/:id', auth, async (req, res) => {
-  const user = await User.findById(req.user[0]._id);
-    if(req.body.fullname != null) user.fullname = req.body.fullname 
-    if(req.body.email != null) user.email = req.body.email 
-    if(req.body.contact != null) user.fullname = req.body.fullname 
-    if(req.body.image != null) user.email = req.body.email 
-    if(req.body.cover != null) user.password = req.body.password 
-    if (password) {
-      const salt = await bcrypt.genSalt();
-      const hashedPassword = await bcrypt.hash(password, salt);
-      user.password = hashedPassword;
-    }
+// router.put('/', auth, async (req, res) => {
+//   const user = await User.findById(req.user[0]._id);
+//     if(req.body.fullname != null) user.fullname = req.body.fullname 
+//     if(req.body.email != null) user.email = req.body.email 
+//     if(req.body.contact != null) user.fullname = req.body.fullname 
+//     if(req.body.image != null) user.email = req.body.email 
+//     if(req.body.cover != null) user.password = req.body.password 
+//     let password = req.body.password
+//     if (password) {
+//       const salt = await bcrypt.genSalt();
+//       const hashedPassword = await bcrypt.hash(password, salt);
+//       user.password = hashedPassword;
+//     }
    
   
-    try {
-      const updatedUser = await user.save();
+//     try {
+//       const updatedUser = await user.save();
   
-      try {
-        const access_token = jwt.sign(
-          JSON.stringify(updatedUser),
-          process.env.ACCESS_TOKEN_SECRET
-        );
-        res.status(201).json({ jwt: access_token, user: updatedUser });
-      } catch (error) {
-        res.status(500).json({ message: error.message });
-      }
-      // Dont just send user as object, create a JWT and send that too.
+//       try {
+//         const access_token = jwt.sign(
+//           JSON.stringify(updatedUser),
+//           process.env.ACCESS_TOKEN_SECRET
+//         );
+//         res.status(201).json({ jwt: access_token, user: updatedUser });
+//       } catch (error) {
+//         res.status(500).json({ message: error.message });
+//       }
+//       // Dont just send user as object, create a JWT and send that too.
+//     } catch (error) {
+//       res.status(400).json({ message: error.message });
+//     }
+// })
+
+router.put('/', auth, async (req, res, next)=>{
+  // Get user from DB using Schema
+  const user = await User.findById(req.user[0]._id)
+
+  // Get info needed to update user
+  const { fullname, contact, password, cover, image, about } = req.body;
+
+  // Set information
+  if (fullname) user.fullname = fullname;
+  if (contact) user.contact = contact;
+  if (cover) user.cover = cover;
+  if (image) user.image = image;
+  if (about) user.about = about;
+  if (password) {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    user.password = hashedPassword;
+  }
+ 
+
+  try {
+    const updatedUser = await user.save();
+
+    try {
+      const access_token = jwt.sign(
+        JSON.stringify(updatedUser),
+        process.env.ACCESS_TOKEN_SECRET
+      );
+      res.status(201).json({ jwt: access_token, user: updatedUser });
     } catch (error) {
-      res.status(400).json({ message: error.message });
+      res.status(500).json({ message: error.message });
     }
+    // Dont just send user as object, create a JWT and send that too.
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
 })
   
 // DELETE USER
-router.delete('/', auth, async (req, res) => {
+router.delete('/user', auth, async (req, res) => {
   const user = await User.findById(req.user[0]._id);
     try{
         await user.remove()
