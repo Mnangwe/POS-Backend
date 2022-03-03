@@ -38,14 +38,14 @@ router.get('/', async (req,res) => {
 })
 
 // READING ONE USER
-router.get('/:id', auth, async (req,res) => {
+router.get('/user', auth, async (req,res) => {
   const user = await User.findById(req.user[0]._id);
     res.send(user)
     
   })
 
 // UPDATE USER
-router.put('/:id', auth, async (req, res) => {
+router.put('/', auth, async (req, res) => {
   const user = await User.findById(req.user[0]._id);
     if(req.body.fullname != null) user.fullname = req.body.fullname 
     if(req.body.email != null) user.email = req.body.email 
@@ -64,7 +64,7 @@ router.put('/:id', auth, async (req, res) => {
 })
   
 // DELETE USER
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/', auth, async (req, res) => {
   const user = await User.findById(req.user[0]._id);
     try{
         await user.remove()
