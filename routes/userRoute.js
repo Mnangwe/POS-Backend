@@ -38,7 +38,7 @@ router.get('/', async (req,res) => {
 })
 
 // READING ONE USER
-router.get('/user', auth, async (req,res) => {
+router.get('/:id', auth, async (req,res) => {
   const user = await User.findById(req.user[0]._id);
     res.send(user)
     
