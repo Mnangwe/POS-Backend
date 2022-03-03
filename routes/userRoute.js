@@ -49,17 +49,31 @@ router.put('/:id', auth, async (req, res) => {
   const user = await User.findById(req.user[0]._id);
     if(req.body.fullname != null) user.fullname = req.body.fullname 
     if(req.body.email != null) user.email = req.body.email 
-    if(req.body.password != null) user.password = req.body.password 
     if(req.body.contact != null) user.fullname = req.body.fullname 
     if(req.body.image != null) user.email = req.body.email 
     if(req.body.cover != null) user.password = req.body.password 
-     
-
+    if (password) {
+      const salt = await bcrypt.genSalt();
+      const hashedPassword = await bcrypt.hash(password, salt);
+      user.password = hashedPassword;
+    }
+   
+  
     try {
-        const updatedUser = await user.save()
-        res.json(updatedUser)
-    }catch (err){
-        res.status(400).json({ msg: err.message })
+      const updatedUser = await user.save();
+  
+      try {
+        const access_token = jwt.sign(
+          JSON.stringify(updatedUser),
+          process.env.ACCESS_TOKEN_SECRET
+        );
+        res.status(201).json({ jwt: access_token, user: updatedUser });
+      } catch (error) {
+        res.status(500).json({ message: error.message });
+      }
+      // Dont just send user as object, create a JWT and send that too.
+    } catch (error) {
+      res.status(400).json({ message: error.message });
     }
 })
   
