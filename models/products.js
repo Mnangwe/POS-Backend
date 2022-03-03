@@ -14,7 +14,8 @@ const productSchema = new mongoose.Schema({
     },
     image: {
         type:String,
-        required: true
+        required: true,
+        default: "https://www.google.com/url?sa=i&url=https%3A%2F%2Fskillz4kidzmartialarts.com%2Fhome%2Fdefault-image%2F&psig=AOvVaw3r7xJCE4cnsHvARlX2pRu-&ust=1646375604532000&source=images&cd=vfe&ved=0CAsQjRxqFwoTCPiv-5qpqfYCFQAAAAAdAAAAABAc"
     },
     price: {
         type:Number,
