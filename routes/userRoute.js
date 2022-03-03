@@ -137,32 +137,34 @@ router.delete('/:id', auth, async (req, res) => {
   
   //  LOG IN USER
 router.patch('/', async (req, res) => {
-  if(!req.body.password || !req.body.email) { return res.status(500).send({msg:"You did not enter your details"})}
-  else{
+  try{
     const users = await User.find()
     const user = users.filter(user => user.email == req.body.email)
-    console.log(user)
-    
+    // console.log(user)
+    if(!user || user == null) res.status(401).json({msg: "Wrong credentials"})
     
     const password = req.body.password
     let compared = await bcrypt.compare(password, user[0].password)
-    if(compared) {
-        console.log(compared)
-        try {
-          const accessToken = jwt.sign(JSON.stringify(user), process.env.ACCESS_TOKEN_SECRET)
-          console.log({msg: 'Token has been created'})
-          res.json({ jwt: accessToken })
-          console.log({msg: 'Successfully logged in!'})
+    if(!password || password == null) res.status(401).json({msg: "Wrong credentials"});
+    else if(compared) {
+      console.log(compared)
+        
+      const accessToken = jwt.sign(JSON.stringify(user), process.env.ACCESS_TOKEN_SECRET)
+      console.log({msg: 'Token has been created'})
+      res.status(200).json({ jwt: accessToken })
+      console.log({msg: 'Successfully logged in!'})
       
         
-      }catch (err) {
-          res.status(500).send({ msg: err.message })
       }
-    } 
+  }catch(err){
+    res.status(500).json({msg: err.message})
   }
-  
-  
+    
+    
   })
+  
+
+  
 
   // STARTING WITH CART ROUTES
 router.post("/:id/cart", [auth, getProduct], async (req, res, next) => {

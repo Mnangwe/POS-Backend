@@ -5,7 +5,7 @@ const cors = require('cors');
 const mongoose = require('mongoose')
 const userRouter = require('./routes/userRoute');
 const productRouter = require('./routes/productRoute');
-// const cartRouter = require('./routes/cartRoute');
+const cartRouter = require('./routes/cartRoute');
 
 
 
@@ -155,7 +155,7 @@ app.get('/', (req, res, next) =>{
 
 app.use('/users', userRouter)
 app.use('/products', productRouter)
-// app.use('/cart', cartRouter)
+app.use('/cart', cartRouter)
 
 
 app.listen(app.get('port'), server =>{
