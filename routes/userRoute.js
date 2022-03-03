@@ -39,7 +39,10 @@ router.get('/', async (req,res) => {
 
 // READING ONE USER
 router.get('/:id', auth, async (req,res) => {
+  console.log("hey there")
+  console.log(req.user[0])
   const user = await User.findById(req.user[0]._id);
+  console.log(user)
     res.send(user)
     
   })

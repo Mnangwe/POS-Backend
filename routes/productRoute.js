@@ -29,6 +29,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
 // READING productS
 router.get('/', authenticateToken, async (req, res) => {
+    console.log("We here now")
     const qNew = req.query.new;
     const qCategory = req.query.category;
     try {
@@ -68,6 +69,7 @@ router.put('/:id', authenticateToken, getProduct, async (req, res) => {
     if(req.body.image != null) res.product.image = req.body.image
     if(req.body.title != null) res.product.title = req.body.title 
     if(req.body.body != null) res.product.body = req.body.body 
+    if(req.body.categories != null) res.product.categories = req.body.categories
     res.product.date = d.toLocaleString()
 
     try {
